@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Playlist Video Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #F2F4F7;
+      --nav-bg-glass: rgba(255, 255, 255, 0.85);
+      --card-bg: #FFFFFF;
+      --text-main: #111827;
+      --text-muted: #6B7280;
+      --border-color: #E5E7EB;
+      --primary-color: #2563EB;
+      --primary-hover: #EFF6FF;
+      --success-color: #10B981;
+      --success-hover: #D1FAE5;
+      --hover-overlay: rgba(0, 0, 0, 0.04);
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0F1115;
+      --nav-bg-glass: rgba(22, 24, 29, 0.85);
+      --card-bg: #16181D;
+      --text-main: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --border-color: #2D3139;
+      --primary-color: #3B82F6;
+      --primary-hover: rgba(59, 130, 246, 0.1);
+      --success-color: #34D399;
+      --success-hover: rgba(16, 185, 129, 0.1);
+      --hover-overlay: rgba(255, 255, 255, 0.05);
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+      --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.4s ease, color 0.4s ease;
+      line-height: 1.6;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      background: var(--nav-bg-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      height: 64px;
+      z-index: 1000;
+      transition: all 0.4s ease;
+    }
+
+    .nav-brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary-color);
+      letter-spacing: -0.5px;
+    }
+
+    .theme-toggle {
+      background: var(--hover-overlay);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(30deg);
+      background: var(--border-color);
+    }
+
+    .feed-container {
+      max-width: 720px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 24px;
+      padding-top: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      opacity: 0;
+      animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card.marked-card {
+      opacity: 0.65;
+      filter: grayscale(25%);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px 14px 16px;
+    }
+
+    .left-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: 1.5px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .mark-btn:hover {
+      border-color: var(--success-color);
+      color: var(--success-color);
+      background-color: var(--success-hover);
+    }
+
+    .mark-btn.marked-btn {
+      background-color: var(--success-color);
+      border-color: var(--success-color);
+      color: white;
+      cursor: default;
+    }
+
+    .author-info { display: flex; flex-direction: column; }
+
+    .author-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .video-index {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .post-title {
+      font-size: 16px;
+      padding: 0 16px 12px 16px;
+      margin: 0;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .video-container {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background-color: #000;
+      border-top: 1px solid var(--border-color);
+    }
+
+    iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    .loader {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .load-more-btn {
+      display: none;
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0 40px 0;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--primary-color);
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s ease;
+    }
+
+    .load-more-btn:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">Past Class</div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+  </nav>
+
+  <div class="feed-container">
+    <div id="loader" class="loader">
+      <div style="animation: pulse 1.5s infinite; opacity: 0.7;">Loading...</div>
+    </div>
+    <style>@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }</style>
+
+    <div id="video-container"></div>
+    <button id="view-more-video" class="load-more-btn" onclick="loadMoreVideos()">Load More Videos</button>
+    <div id="end-video-msg" class="loader" style="display:none;">All videos loaded.</div>
+  </div>
+
+  <script>
+    // Replace with your Google Apps Script Web App Deployment URL
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzmaKkmgFbsfjEDOQ5Abex8lx9Hc5pxe_8m-DOLVesAcwgY9rsOQmrFw54LfFRzG_Th/exec';
+
+    let videoData = [];
+    let currentVideoIndex = 0;
+    const itemsPerPage = 15;
+
+    const checkIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    async function loadContent() {
+      try {
+        const response = await fetch(API_URL);
+        const resJson = await response.json();
+        if (resJson.success) {
+          processData(resJson.data);
+        } else {
+          document.getElementById('loader').innerText = 'Failed to load playlist: ' + (resJson.error || 'Unknown error');
+        }
+      } catch (err) {
+        document.getElementById('loader').innerText = 'Connection error. Please verify the Apps Script URL.';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadContent);
+
+    function processData(data) {
+      document.getElementById('loader').style.display = 'none';
+      videoData = data;
+      loadMoreVideos();
+    }
+
+    async function markItem(buttonElement, linkUrl) {
+      const card = buttonElement.closest('.card');
+      if (buttonElement.classList.contains('marked-btn')) return;
+
+      buttonElement.classList.add('marked-btn');
+      card.classList.add('marked-card');
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'mark', uniqueId: linkUrl }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+      } catch(e) {
+        console.error('Save error:', e);
+      }
+    }
+
+    function createCardHTML(item) {
+      const markClass = item.isMarked ? 'marked-btn' : '';
+      const cardClass = item.isMarked ? 'marked-card' : '';
+      const linkToStore = item.directLink;
+
+      return `
+        <div class="card ${cardClass}">
+          <div class="card-header">
+            <div class="left-header">
+              <button class="action-btn mark-btn ${markClass}" onclick="markItem(this, '${linkToStore}')" title="Mark Video as Completed">${checkIcon}</button>
+              <div class="author-info">
+                <h4 class="author-name">${item.channel}</h4>
+                <p class="video-index">Episode #${item.position}</p>
+              </div>
+            </div>
+          </div>
+          <h3 class="post-title">${item.title}</h3>
+          <div class="video-container">
+            <iframe src="${item.embedUrl}" allowfullscreen loading="lazy"></iframe>
+          </div>
+        </div>
+      `;
+    }
+
+    function loadMoreVideos() {
+      const container = document.getElementById('video-container');
+      const endIndex = Math.min(currentVideoIndex + itemsPerPage, videoData.length);
+      for (let i = currentVideoIndex; i < endIndex; i++) {
+        container.insertAdjacentHTML('beforeend', createCardHTML(videoData[i]));
+      }
+      currentVideoIndex = endIndex;
+      document.getElementById('view-more-video').style.display = currentVideoIndex < videoData.length ? 'block' : 'none';
+      if (currentVideoIndex >= videoData.length && videoData.length > 0) {
+        document.getElementById('end-video-msg').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
